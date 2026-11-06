@@ -1,0 +1,9 @@
+{
+  "name": "Aqara Home",
+  "short_name": "Aqara Home",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b1016",
+  "theme_color": "#0f766e",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "aqara-smart-home",
+  "version": "0.1.0",
+  "description": "Smart home dashboard and API for Aqara devices (Aqara Open API v3), with a built-in demo mode.",
+  "type": "module",
+  "main": "src/server.js",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test"
+  },
+  "license": "MIT"
+}

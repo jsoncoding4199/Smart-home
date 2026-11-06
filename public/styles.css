@@ -1,0 +1,55 @@
+:root {
+  --bg: #f4f6f8; --card: #fff; --text: #111827; --muted: #6b7280; --line: #e5e7eb;
+  --accent: #0f766e; --accent-soft: #ccfbf1; --warn: #b91c1c; --warn-soft: #fee2e2; --radius: 16px;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0b1016; --card: #151c24; --text: #e5e7eb; --muted: #94a3b8; --line: #263241; --accent: #2dd4bf; --accent-soft: #134e4a; --warn: #f87171; --warn-soft: #450a0a; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); }
+main { max-width: 1100px; margin: 0 auto; padding: 0 16px 48px; }
+h1 { margin: 0; font-size: 1.5rem; }
+h2 { font-size: 1rem; margin: 28px 0 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.muted { color: var(--muted); margin: 2px 0 0; }
+.top { max-width: 1100px; margin: 0 auto; padding: 24px 16px 0; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.badge { font-size: .8rem; padding: 4px 10px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); font-weight: 600; white-space: nowrap; }
+
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; margin-top: 24px; }
+.row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+input { flex: 1; min-width: 180px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--text); font: inherit; }
+button { font: inherit; cursor: pointer; border: 0; border-radius: 10px; padding: 10px 16px; background: var(--accent); color: #fff; font-weight: 600; }
+button:disabled { opacity: .5; cursor: wait; }
+
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 99px; padding: 8px 16px; }
+.chip:hover { border-color: var(--accent); }
+
+.tabs { display: flex; gap: 4px; margin-top: 28px; overflow-x: auto; border-bottom: 1px solid var(--line); }
+.tabs button { background: none; color: var(--muted); border-radius: 0; padding: 10px 14px; border-bottom: 2px solid transparent; white-space: nowrap; }
+.tabs button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-top: 16px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 10px; min-height: 130px; }
+.card.on { border-color: var(--accent); }
+.card.alert { border-color: var(--warn); background: var(--warn-soft); }
+.card.offline { opacity: .55; }
+.card header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.card h3 { margin: 0; font-size: 1rem; }
+.card .meta { font-size: .8rem; color: var(--muted); }
+.icon { font-size: 1.4rem; line-height: 1; }
+.value { font-size: 1.6rem; font-weight: 650; }
+.value small { font-size: .9rem; color: var(--muted); font-weight: 500; margin-left: 6px; }
+input[type="range"] { width: 100%; padding: 0; accent-color: var(--accent); min-width: 0; }
+
+.switch { position: relative; width: 48px; height: 28px; flex: none; padding: 0; border-radius: 99px; background: var(--line); }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: transform .15s; }
+.switch[aria-checked="true"] { background: var(--accent); }
+.switch[aria-checked="true"]::after { transform: translateX(20px); }
+
+.list { list-style: none; margin: 0; padding: 0; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); }
+.list li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px; border-top: 1px solid var(--line); }
+.list li:first-child { border-top: 0; }
+
+#toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 10px; opacity: 0; transition: opacity .2s; pointer-events: none; max-width: calc(100% - 32px); }
+#toast.show { opacity: 1; }

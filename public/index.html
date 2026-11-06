@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f766e">
+  <title>Aqara Home</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="top">
+    <div>
+      <h1>Aqara Home</h1>
+      <p id="summary" class="muted">Loading…</p>
+    </div>
+    <span id="mode" class="badge"></span>
+  </header>
+
+  <main>
+    <section id="login" class="panel" hidden>
+      <h2>Connect your Aqara account</h2>
+      <p class="muted">Aqara sends a verification code to your account. Enter it below to link this dashboard.</p>
+      <form id="login-form" class="row">
+        <input id="account" name="account" placeholder="Phone or email" autocomplete="username" required>
+        <button type="submit">Send code</button>
+      </form>
+      <form id="code-form" class="row" hidden>
+        <input id="code" name="code" placeholder="Verification code" inputmode="numeric" required>
+        <button type="submit">Connect</button>
+      </form>
+    </section>
+
+    <section id="home" hidden>
+      <h2>Scenes</h2>
+      <div id="scenes" class="chips"></div>
+
+      <nav id="rooms" class="tabs" aria-label="Rooms"></nav>
+      <div id="devices" class="grid"></div>
+
+      <h2>Automations</h2>
+      <ul id="automations" class="list"></ul>
+    </section>
+  </main>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
