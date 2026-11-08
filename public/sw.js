@@ -1,5 +1,5 @@
 // App-shell cache so the dashboard opens instantly; API calls always go to the network.
-const CACHE = 'aqara-home-v1';
+const CACHE = 'aqara-home-v2';
 const SHELL = ['/', '/index.html', '/styles.css', '/app.js', '/icon.svg', '/manifest.webmanifest'];
 
 self.addEventListener('install', (e) => e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL))));

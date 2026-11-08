@@ -47,13 +47,13 @@ function render() {
   const { rooms, devices, scenes, automations } = state.data;
   const roomName = Object.fromEntries(rooms.map((r) => [r.id, r.name]));
 
-  const on = devices.filter((d) => d.state.on).length;
+  const visible = devices.filter((d) => d.type !== 'hub');
+  const on = visible.filter((d) => d.state.on).length;
   const alerts = devices.filter(isAlert).length;
-  $('#summary').textContent = `${devices.length} devices · ${on} on${alerts ? ` · ⚠️ ${alerts} alert${alerts > 1 ? 's' : ''}` : ''}`;
+  $('#summary').textContent = `${visible.length} devices · ${on} on${alerts ? ` · ⚠️ ${alerts} alert${alerts > 1 ? 's' : ''}` : ''}`;
 
-  $('#scenes').replaceChildren(...(scenes.length
-    ? scenes.map((s) => el('button', { class: 'chip', onclick: (e) => runScene(s, e.currentTarget) }, `▶ ${s.name}`))
-    : [el('p', { class: 'muted' }, 'No scenes yet — create them in the Aqara Home app.')]));
+  $('#scenes').hidden = !scenes.length;
+  $('#scenes').replaceChildren(...scenes.map((s) => el('button', { class: 'chip', onclick: (e) => runScene(s, e.currentTarget) }, `▶ ${s.name}`)));
 
   const tabs = [{ id: 'all', name: 'All' }, ...rooms.filter((r) => devices.some((d) => d.roomId === r.id))];
   $('#rooms').replaceChildren(...tabs.map((r) => el('button', {
@@ -61,9 +61,14 @@ function render() {
     onclick: () => { state.room = r.id; render(); },
   }, r.name)));
 
-  const shown = devices.filter((d) => state.room === 'all' || d.roomId === state.room);
-  $('#devices').replaceChildren(...shown.map((d) => deviceCard(d, roomName[d.roomId])));
+  // Hubs carry no useful state; sensors go in a compact strip below the controls.
+  const shown = devices.filter((d) => d.type !== 'hub' && (state.room === 'all' || d.roomId === state.room));
+  const showRoom = state.room === 'all';
+  $('#devices').replaceChildren(...shown.filter(isControl).map((d) => deviceCard(d, showRoom && roomName[d.roomId])));
+  $('#sensors').replaceChildren(...shown.filter((d) => !isControl(d)).map((d) => sensorTile(d, showRoom && roomName[d.roomId])));
 
+  const enabled = automations.filter((a) => a.enabled).length;
+  $('#automations-count').textContent = automations.length ? `${enabled}/${automations.length} on` : '';
   $('#automations').replaceChildren(...(automations.length
     ? automations.map((a) => el('li', {},
         el('div', {}, el('div', {}, a.name), el('div', { class: 'meta muted' }, roomName[a.roomId] || '')),
@@ -71,8 +76,12 @@ function render() {
     : [el('li', { class: 'muted' }, 'No automations')]));
 }
 
+const CONTROL_TYPES = ['light', 'switch', 'curtain'];
+const isControl = (d) => CONTROL_TYPES.includes(d.type);
+const lowBattery = (d) => d.state.battery !== undefined && d.state.battery < 20;
+
 function isAlert(d) {
-  return d.state.leak === true || (d.state.battery !== undefined && d.state.battery < 20);
+  return d.state.leak === true || lowBattery(d);
 }
 
 function toggle(checked, label, onChange) {
@@ -82,51 +91,69 @@ function toggle(checked, label, onChange) {
   });
 }
 
+function meta(d, room) {
+  // Only show what needs attention: battery when low, offline when offline.
+  return [room, !d.online && 'offline', lowBattery(d) && `🔋 ${d.state.battery}%`].filter(Boolean).join(' · ');
+}
+
 function deviceCard(d, room) {
   const s = d.state;
   const cls = ['card', s.on && 'on', isAlert(d) && 'alert', !d.online && 'offline'].filter(Boolean).join(' ');
-  const body = [];
+  let slider = null;
+  let extra = null;
 
-  switch (d.type) {
-    case 'switch':
-    case 'light':
-      body.push(el('div', { class: 'value' }, s.on ? 'On' : 'Off'));
-      if (d.type === 'light' && s.brightness !== undefined) {
-        body.push(el('input', {
-          type: 'range', min: 1, max: 100, value: s.brightness, 'aria-label': `${d.name} brightness`,
-          onchange: (e) => control(d, { brightness: Number(e.target.value), on: true }),
-        }));
-      }
-      break;
-    case 'curtain':
-      body.push(el('div', { class: 'value' }, `${s.position ?? '–'}%`, el('small', {}, 'open')));
-      body.push(el('input', {
-        type: 'range', min: 0, max: 100, value: s.position ?? 0, 'aria-label': `${d.name} position`,
-        onchange: (e) => control(d, { position: Number(e.target.value) }),
-      }));
-      break;
-    case 'climate':
-      body.push(el('div', { class: 'value' }, s.temperature !== undefined ? `${s.temperature.toFixed(1)}°` : '–',
-        s.humidity !== undefined ? el('small', {}, `${Math.round(s.humidity)}% RH`) : null));
-      if (s.pressure !== undefined) body.push(el('div', { class: 'meta' }, `${Math.round(s.pressure)} hPa`));
-      break;
-    case 'motion': body.push(el('div', { class: 'value' }, s.motion ? 'Motion' : 'Clear')); break;
-    case 'contact': body.push(el('div', { class: 'value' }, s.open ? 'Open' : 'Closed')); break;
-    case 'leak': body.push(el('div', { class: 'value' }, s.leak ? 'Leak!' : 'Dry')); break;
-    default: body.push(el('div', { class: 'meta' }, d.model));
+  if (d.type === 'curtain') {
+    extra = el('div', { class: 'value' }, `${s.position ?? '–'}%`);
+    slider = el('input', {
+      type: 'range', min: 0, max: 100, value: s.position ?? 0, 'aria-label': `${d.name} position`,
+      onchange: (e) => controlDevice(d, { position: Number(e.target.value) }),
+    });
+  } else {
+    extra = toggle(s.on, `Toggle ${d.name}`, (v) => controlDevice(d, { on: v }));
+    if (d.type === 'light' && s.brightness !== undefined) {
+      slider = el('input', {
+        type: 'range', min: 1, max: 100, value: s.brightness, 'aria-label': `${d.name} brightness`,
+        onchange: (e) => controlDevice(d, { brightness: Number(e.target.value), on: true }),
+      });
+    }
   }
-
-  const meta = [room, !d.online && 'offline', s.battery !== undefined && `🔋 ${s.battery}%`].filter(Boolean).join(' · ');
+  const m = meta(d, room);
   return el('article', { class: cls },
     el('header', {},
-      el('div', {}, el('span', { class: 'icon', 'aria-hidden': 'true' }, ICONS[d.type] || ICONS.other), el('h3', {}, d.name), el('div', { class: 'meta' }, meta)),
-      ['switch', 'light'].includes(d.type) ? toggle(s.on, `Toggle ${d.name}`, (v) => control(d, { on: v })) : null),
-    ...body);
+      el('div', { class: 'title' },
+        el('span', { class: 'icon', 'aria-hidden': 'true' }, ICONS[d.type] || ICONS.other),
+        el('div', {}, el('h3', {}, d.name), m ? el('div', { class: 'meta' }, m) : null)),
+      extra),
+    slider);
+}
+
+function sensorReading(d) {
+  const s = d.state;
+  switch (d.type) {
+    case 'climate':
+      return [s.temperature !== undefined ? `${s.temperature.toFixed(1)}°` : '–',
+        s.humidity !== undefined ? el('small', {}, `${Math.round(s.humidity)}%`) : null];
+    case 'motion': return s.motion ? 'Motion' : 'Clear';
+    case 'contact': return s.open ? 'Open' : 'Closed';
+    case 'leak': return s.leak ? 'Leak!' : 'Dry';
+    default: return d.model;
+  }
+}
+
+function sensorTile(d, room) {
+  const cls = ['tile', isAlert(d) && 'alert', !d.online && 'offline', (d.state.open || d.state.motion) && 'active'].filter(Boolean).join(' ');
+  const m = meta(d, room);
+  return el('div', { class: cls },
+    el('span', { class: 'icon', 'aria-hidden': 'true' }, ICONS[d.type] || ICONS.other),
+    el('div', { class: 'tile-body' },
+      el('div', { class: 'tile-name' }, d.name),
+      m ? el('div', { class: 'meta' }, m) : null),
+    el('div', { class: 'tile-value' }, sensorReading(d)));
 }
 
 // ---- actions ----------------------------------------------------------------
 
-async function control(d, command) {
+async function controlDevice(d, command) {
   try {
     const updated = await api(`devices/${encodeURIComponent(d.id)}`, command);
     Object.assign(d, updated);

@@ -7,6 +7,7 @@ A self-hosted smart home dashboard + REST API for **Aqara** devices, built on th
 - Sensors: temperature/humidity/pressure, motion, door/window, water leak, battery
 - Run scenes and enable/disable automations created in the Aqara Home app
 - Installable PWA, light/dark theme, auto-refresh every 10 s
+- Tablet-friendly: fits one landscape screen, sensors in a compact strip, automations collapsed
 - **Demo mode** with simulated devices when no Aqara credentials are set
 
 ## Quick start

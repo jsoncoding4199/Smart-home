@@ -33,14 +33,16 @@
     </section>
 
     <section id="home" hidden>
-      <h2>Scenes</h2>
-      <div id="scenes" class="chips"></div>
+      <div id="scenes" class="chips" aria-label="Scenes"></div>
 
       <nav id="rooms" class="tabs" aria-label="Rooms"></nav>
       <div id="devices" class="grid"></div>
+      <div id="sensors" class="sensors"></div>
 
-      <h2>Automations</h2>
-      <ul id="automations" class="list"></ul>
+      <details id="automations-panel">
+        <summary>Automations <span id="automations-count" class="muted"></span></summary>
+        <ul id="automations" class="list"></ul>
+      </details>
     </section>
   </main>
 
